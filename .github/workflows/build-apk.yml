@@ -42,6 +42,17 @@ jobs:
           npx cap init "DJ Horn" "us.dannyhand.djhorn" --web-dir www
           npx cap add android
 
+      # The page calls navigator.vibrate() on each honk. Inside an app that
+      # only works if the app has the VIBRATE permission, which Capacitor
+      # doesn't add by default.
+      - name: Allow vibration
+        working-directory: cap-build/android/app/src/main
+        run: |
+          sed -i 's#<uses-permission android:name="android.permission.INTERNET" />#&\n    <uses-permission android:name="android.permission.VIBRATE" />#' AndroidManifest.xml
+          grep -q 'android.permission.VIBRATE' AndroidManifest.xml || \
+            sed -i 's#</manifest>#    <uses-permission android:name="android.permission.VIBRATE" />\n</manifest>#' AndroidManifest.xml
+          grep uses-permission AndroidManifest.xml
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
