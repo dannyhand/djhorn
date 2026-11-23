@@ -1,0 +1,324 @@
+<!doctype html>
+<!-- Moist.biz, Danny Hand -->
+<html dir="ltr" lang="en-us">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#2196c9" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="icon" href="icons/icon-192.png">
+  <title>Horn : moist.biz</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+      touch-action: manipulation;
+      /* no double-tap zoom when mashing the button */
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    body {
+      background: linear-gradient(-45deg, #1e3a5f, #2196c9, #00d4d4, #7fe8e0);
+      background-size: 400% 400%;
+      animation: gradientShift 10s ease infinite;
+      font-family: "Roboto", sans-serif;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image: url("wtrsvg.svg");
+      background-repeat: repeat;
+      background-size: 200px 200px;
+      background-position: center center;
+      opacity: 0.1;
+      pointer-events: none;
+      z-index: 0;
+      animation: scrollRight 8s linear infinite;
+    }
+
+    @keyframes gradientShift {
+      0% {
+        background-position: 0% 50%;
+      }
+
+      50% {
+        background-position: 100% 50%;
+      }
+
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    @keyframes scrollRight {
+      from {
+        background-position: 0 center;
+      }
+
+      to {
+        background-position: 200px center;
+      }
+    }
+
+    /* ---- Horn button ---- */
+    #horn {
+      position: fixed;
+      left: 50%;
+      top: 62.5%;
+      /* 5/8 down: thumb reach */
+      top: 62.5dvh;
+      width: min(62vw, 34dvh, 280px);
+      aspect-ratio: 1;
+      transform: translate(-50%, -50%);
+      z-index: 1;
+      padding: 0;
+      border: 0;
+      background: none;
+      cursor: pointer;
+      border-radius: 50%;
+      outline: none;
+    }
+
+    #horn:focus-visible {
+      box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.85);
+    }
+
+    #horn svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      filter: drop-shadow(0 10px 14px rgba(10, 30, 60, 0.45));
+      transition: transform 0.08s ease, filter 0.08s ease;
+    }
+
+    #horn.down svg {
+      transform: scale(0.93) translateY(3px);
+      filter: drop-shadow(0 3px 5px rgba(10, 30, 60, 0.5));
+    }
+
+    #horn .face {
+      transition: filter 0.08s ease;
+    }
+
+    #horn.down .face {
+      filter: brightness(0.88);
+    }
+
+    /* blast rings pulse out while the horn is sounding */
+    .blast {
+      position: fixed;
+      left: 50%;
+      top: 62.5%;
+      top: 62.5dvh;
+      width: min(62vw, 34dvh, 280px);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: 3px solid rgba(220, 245, 255, 0.9);
+      transform: translate(-50%, -50%) scale(1);
+      pointer-events: none;
+      z-index: 0;
+      animation: blast 0.9s ease-out forwards;
+    }
+
+    @keyframes blast {
+      to {
+        transform: translate(-50%, -50%) scale(2.3);
+        opacity: 0;
+      }
+    }
+
+    #horn.playing .horn-icon {
+      animation: shake 0.09s linear infinite;
+      transform-origin: 100px 100px;
+    }
+
+    @keyframes shake {
+      0% {
+        transform: translate(0, 0);
+      }
+
+      25% {
+        transform: translate(1.2px, -0.8px);
+      }
+
+      50% {
+        transform: translate(-1px, 0.9px);
+      }
+
+      75% {
+        transform: translate(0.8px, 1px);
+      }
+
+      100% {
+        transform: translate(0, 0);
+      }
+    }
+
+    /* ---- Footer ---- */
+    footer {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1;
+      padding: 14px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+      text-align: center;
+      font-size: 14px;
+      letter-spacing: 0.04em;
+    }
+
+    footer a {
+      color: #446484;
+      text-decoration: none;
+      text-decoration-color: #446484;
+      padding: 6px 10px;
+      /* bigger tap target */
+    }
+
+    footer a:hover,
+    footer a:focus-visible {
+      color: #446484;
+      text-decoration: underline;
+      text-decoration-color: #446484;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+      body,
+      body::before {
+        animation: none;
+      }
+
+      #horn.playing .horn-icon {
+        animation: none;
+      }
+
+      .blast {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <button id="horn" type="button" aria-label="Sound the horn">
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <radialGradient id="faceGrad" cx="50%" cy="38%" r="65%">
+          <stop offset="0%" stop-color="#ff6a4d" />
+          <stop offset="60%" stop-color="#e3261c" />
+          <stop offset="100%" stop-color="#a5110f" />
+        </radialGradient>
+      </defs>
+      <!-- red face -->
+      <circle class="face" cx="100" cy="100" r="96" fill="url(#faceGrad)" />
+
+      <!-- air horn icon, (1250×1250 viewport) -->
+      <g class="horn-icon">
+        <g transform="translate(100 104) scale(0.1425) translate(-632 -403)">
+          <path fill="#000" fill-opacity="0.25" transform="translate(0 18)"
+            d="M918.83,213.91C821.35,307.16 759.98,348.32 502.94,368.44l0,-24c0,-4.43 -3.59,-8.02 -8.02,-8.02l-49.89,-0c-4.43,-0 -8.02,3.59 -8.02,8.02l0,7.62c-9.23,-11.78 -23.61,-18.86 -39.01,-18.86l0,-0.56c0,-3.61 -2.93,-6.54 -6.54,-6.54l-21.93,-0c-3.61,-0 -6.54,2.93 -6.54,6.54l0,148.66c0,3.61 2.93,6.54 6.54,6.54l21.93,-0c3.61,-0 6.54,-2.93 6.54,-6.54l0,-0.57 0,-0c3.64,-0 7.23,-0.4 10.71,-1.16l0,24.6 122.54,-0 0,-56.35c243.28,20.92 293.71,62.41 387.58,152.2 3.22,3.08 8.56,0.79 8.56,-3.66l0,-378.78c0,-4.45 -5.34,-6.75 -8.56,-3.67z" />
+          <path fill="#ffffff"
+            d="M918.83,213.91C821.35,307.16 759.98,348.32 502.94,368.44l0,-24c0,-4.43 -3.59,-8.02 -8.02,-8.02l-49.89,-0c-4.43,-0 -8.02,3.59 -8.02,8.02l0,7.62c-9.23,-11.78 -23.61,-18.86 -39.01,-18.86l0,-0.56c0,-3.61 -2.93,-6.54 -6.54,-6.54l-21.93,-0c-3.61,-0 -6.54,2.93 -6.54,6.54l0,148.66c0,3.61 2.93,6.54 6.54,6.54l21.93,-0c3.61,-0 6.54,-2.93 6.54,-6.54l0,-0.57 0,-0c3.64,-0 7.23,-0.4 10.71,-1.16l0,24.6 122.54,-0 0,-56.35c243.28,20.92 293.71,62.41 387.58,152.2 3.22,3.08 8.56,0.79 8.56,-3.66l0,-378.78c0,-4.45 -5.34,-6.75 -8.56,-3.67z" />
+        </g>
+      </g>
+    </svg>
+  </button>
+
+  <footer>
+    <a href="https://dannyhand.us">dannyhand.us</a>
+  </footer>
+
+  <script>
+      (function () {
+        const SOUND_URL = "hornsiren.wav";
+        const btn = document.getElementById("horn");
+
+        // Web Audio gives instant, repeatable playback on phones.
+        // Falls back to a plain <audio> element (e.g. when opened from file://).
+        let actx = null, buffer = null, source = null, fallback = null, stopTimer = 0;
+
+        function loadBuffer() {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (!AC || location.protocol === "file:") return;
+          actx = new AC();
+          fetch(SOUND_URL)
+            .then((r) => r.arrayBuffer())
+            .then((data) => new Promise((ok, bad) => actx.decodeAudioData(data, ok, bad)))
+            .then((b) => { buffer = b; })
+            .catch(() => { actx = null; });
+        }
+
+        function setPlaying(seconds) {
+          btn.classList.add("playing");
+          clearTimeout(stopTimer);
+          stopTimer = setTimeout(() => btn.classList.remove("playing"), seconds * 1000);
+        }
+
+        function blast() {
+          const ring = document.createElement("div");
+          ring.className = "blast";
+          document.body.appendChild(ring);
+          ring.addEventListener("animationend", () => ring.remove());
+        }
+
+        function honk() {
+          // each press restarts the horn from the top
+          if (actx && buffer) {
+            if (actx.state === "suspended") actx.resume();
+            if (source) { try { source.stop(); } catch (e) {} }
+            source = actx.createBufferSource();
+            source.buffer = buffer;
+            source.connect(actx.destination);
+            source.start();
+            setPlaying(buffer.duration);
+          } else {
+            if (!fallback) fallback = new Audio(SOUND_URL);
+            fallback.currentTime = 0;
+            fallback.play().catch(() => {});
+            setPlaying(fallback.duration || 2.1);
+          }
+          blast();
+          if (navigator.vibrate) navigator.vibrate(60);
+        }
+
+        // fire on press (not release) so it feels instant
+        btn.addEventListener("pointerdown", (e) => {
+          if (e.button !== 0) return;
+          btn.classList.add("down");
+          honk();
+        });
+        const up = () => btn.classList.remove("down");
+        btn.addEventListener("pointerup", up);
+        btn.addEventListener("pointercancel", up);
+        btn.addEventListener("pointerleave", up);
+        btn.addEventListener("contextmenu", (e) => e.preventDefault());
+
+        // keyboard: Space / Enter
+        btn.addEventListener("keydown", (e) => {
+          if ((e.key === " " || e.key === "Enter") && !e.repeat) {
+            e.preventDefault();
+            btn.classList.add("down");
+            honk();
+          }
+        });
+        btn.addEventListener("keyup", up);
+
+        loadBuffer();
+      })();
+    </script>
+</body>
+
+</html>
